@@ -1,6 +1,32 @@
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
+from MakeData import *
+
+def test_model(D, num_test_data):
+    x_tt, y_tt = GTdata(num_test_data, 2)
+    #scale
+    x_t = preprocess(x_tt).numpy()
+    y_t = y_tt.numpy()
+    y_p = []
+
+    for i in range(len(y_t)):
+        if abs(np.inner(x_t[i], D[0][0])) >= D[0][1]:
+            y_p.append(np.sign(np.inner(x_t[i], D[0][0])))
+            continue
+        if abs(np.inner(x_t[i], D[1][0])) >= D[1][1]:
+            y_p.append(np.sign(np.inner(x_t[i], D[1][0])))
+            continue
+        y_p.append(np.sign(np.inner(x_t[i], D[2][0])))
+        # if abs(np.inner(x_t[i], D[2][0])) >= D[2][1]:
+        #     y_p.append(np.sign(np.inner(x_t[i], D[2][0])))
+        #     continue
+
+    dis = y_p - y_t
+    true = dis.tolist().count(0)
+    error_rate = 1 - true/len(dis)
+
+    return error_rate
 
 
 

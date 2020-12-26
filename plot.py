@@ -23,7 +23,7 @@ def Fsign(x):
         if x[i] >= 0:
             y.append(1)
         else:
-            y.append(-1)
+            y.append(0)
     return y
 
 x = np.linspace(-5, 5, 500)

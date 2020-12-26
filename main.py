@@ -28,6 +28,7 @@ def stop_sign():
 def findT(w, x, y, gamma, eps):
     percent = gamma * eps
     inprod = []
+    jump = 0
     
     for i in range(len(y)):
         inprod.append(torch.mm(w, x[i].view(-1,1)))
@@ -38,6 +39,9 @@ def findT(w, x, y, gamma, eps):
     #find the upper bound of T
     #计算当前决策面w下内积最大的样本列表
     top_n = int(len(y) * percent)
+    # if top_n == 0:
+    #     jump = 1
+    #     top_n = int(len(y)/2)
     upper_list = torch.topk(torch.abs(inprod), top_n, dim=0)
     upper_T,_ = upper_list
     #T应该小于这些内积中的最小值
@@ -61,6 +65,8 @@ def findT(w, x, y, gamma, eps):
     
     #T = min(max_T, min_T)
     T_i = min(T_max, T_min)
+    # if jump == 1:
+    #     T_i = T_max
     w_i = w
 
     return w_i, T_i
@@ -90,9 +96,9 @@ if __name__ == '__main__':
     np.random.seed(713)
     
     #PAC Parameter
-    gamma = 0.1#Margin0.1
+    gamma = 0.1#Margin 0.1
     eta = 0.417#eta Upper Bound
-    eps = 0.1#precision
+    eps = 0.09#precision
     lamb = eta + eps#LeakyReLU lamb ~= eta
 
     #Data Parameter
@@ -102,7 +108,7 @@ if __name__ == '__main__':
 
     #Train Parameter
     EPOCH = 2#SGD epoch
-    LenD = 0#length of decision list
+    LenD = 0
 
     #(x_g,y_g)   GT data
     x_g, y_g = GTdata(num_data,d_data)
@@ -128,6 +134,7 @@ if __name__ == '__main__':
 
     #Decision list
     D = []
+    LEFT = len(y_s)
 
 
     while len(y_s) >= num_sample_data * eps:
@@ -135,6 +142,7 @@ if __name__ == '__main__':
         print('loop:{}'.format(LenD),'num_sample:{}'.format(len(y_s)))
 
         #load data
+
         dataset = torch.utils.data.TensorDataset(x_s, y_s)
         dataloader = torch.utils.data.DataLoader(
                                                 dataset,
@@ -180,21 +188,38 @@ if __name__ == '__main__':
                 w_n = p.data
             #print('w is :{}||'.format(w_n),'her norm :{}||'.format(torch.norm(w_n, p=2)))
             print('Loss: {}'.format(running_loss))
-        
+
+        x_c, y_c = resample_data(x_s, y_s,500)
+        x_s = x_s.cuda()
+        y_s = y_s.cuda()
+        x_c = x_c.cuda()
+        y_c = y_c.cuda()
+        w_i, T_i = findT(w_n, x_c, y_c, gamma, eps)
+
+        x_s, y_s = update_region(x_s, y_s, w_i, T_i)
+        #x_s, y_s = resample_data(x_s, y_s,500)
+        '''
         x_s = x_s.cuda()
         y_s = y_s.cuda()
         w_i, T_i = findT(w_n, x_s, y_s, gamma, eps)
         x_s, y_s = update_region(x_s, y_s, w_i, T_i)
+        '''
 
         w_i = w_i.cpu()
         T_i = T_i.cpu()
         print('w_{} = ({})'.format(LenD, w_i.data),
                 'T_{} = {}'.format(LenD, T_i.data)
         )
-        D.append([w_i,T_i])
+        print(LEFT)
+        w_i = torch.squeeze(w_i)
+        D.append([w_i.numpy().tolist(),T_i.numpy().tolist()])
+        
 
     print("All data are classified, Decision list is:")
     print(D)
+    err  = test_model(D, 200)
+    print("err is:")
+    print(err)
 
 
 

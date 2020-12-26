@@ -106,6 +106,36 @@ def sample_with_margin(x,y,num_sample_data,gamma):
     y_s = torch.tensor(y_s).type(torch.LongTensor)
     return x_s, y_s
 
+def resample_data(x,y,num_sample_data):
+    x = x.numpy()
+    y = y.numpy()
+    x_s = x
+    y_s = y
+    
+    #choose some point
+    #y_s = np.expand_dims(y_s, axis=1)#(n,)->(n,1)
+    data_arr = np.concatenate((x_s,y_s),axis = 1)#(n,2)|(n,1)->(n,3)
+    row_total = data_arr.shape[0]
+    row_sequence= np.random.choice(
+        row_total,
+        num_sample_data,
+        replace=True
+        )
+    data_arr = data_arr[row_sequence,:]
+
+    x_s = data_arr[:,:-1]
+    y_s = data_arr[:,-1]
+    y_s = np.expand_dims(y_s, axis=1)
+
+    x_s = torch.tensor(x_s).type(torch.FloatTensor)
+    y_s = torch.tensor(y_s).type(torch.LongTensor)
+    x_s = x_s.cpu()
+    y_s = y_s.cpu()
+    return x_s, y_s
+
+
+
+
 '''
 plt.scatter(x_s.data.numpy()[:,0],x_s.data.numpy()[:,1],
             s = 10, c = y_s.data.numpy(), cmap = 'coolwarm')

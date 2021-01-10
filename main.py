@@ -97,7 +97,7 @@ if __name__ == '__main__':
     
     #PAC Parameter
     gamma = 0.1#Margin 0.1
-    eta = 0.417#eta Upper Bound
+    eta = 0.417#eta Upper Bound0.417
     eps = 0.09#precision
     lamb = eta + eps#LeakyReLU lamb ~= eta
 

@@ -28,8 +28,6 @@ def test_model(D, num_test_data):
 
     return error_rate
 
-
-
 def show_data(x, y, xlim, ylim, cc = False, ci = False):
     plt.figure(num=1,figsize=(5,5))
     if cc == True:
